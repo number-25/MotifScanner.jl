@@ -3,7 +3,11 @@ uuid = "20d16d9c-e052-46f5-8fae-7238198fc326"
 authors = ["number-25 <swnt@protonmail.com> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"
+
 [compat]
+FASTX = "2.1.7"
 julia = "1.6.7"
 
 [extras]
