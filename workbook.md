@@ -23,6 +23,49 @@ seqtk sample gencode.v47.lncRNA_transcripts.fa 20 | seqkit seq -w 60 - > ~/local
 gzip -k sample_lncRNAs_20.fasta
 ```
 
+### Understand how BioSequences, FASTX IO functions
+
+#### Store FASTA data inside vector
+The struc which the FASTX package employs is called a Record - each Record
+represents a fasta sequence; it's *identifier* which is the first word after
+'>' e.g. ">chr1", the *description*, which is the remainder of the 'header'
+after the identifier e.g. ">chr1 | GHH18.ENSEM09912", and the *sequence* on the
+next line, which is the actual sequence content of the record. 
+
+The vector will thus be a vector of FASTX Records which can be accessed in a indexed manner.   
+
+Using a GZIP decoder, the gzipped fasta file can validated, and accessed. 
+```julia
+using CodecZlib
+
+validate_fasta(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fasta.gz"))) === nothing
+
+io = FASTAReader(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fasta.gz")))
+
+collected_records = collect(io) ; close(io)
+```
+
+sequence(LongDNA{2},collected_records[1])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
