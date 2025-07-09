@@ -7,7 +7,7 @@ I want to be able to input the fasta sequence of an RNA, and scan the RNA
 string to search for the presence of specific motifs. In particular, I am
 foremost interested in the U1 SNRP and poly-adenylation signal motifs.  
 
-For every RNA input, the position these motifs within the RNA is tabulated
+For every RNA input, the position of these motifs within the RNA is tabulated
 (dict?), along with the length of the RNA string, and perhaps a length
 normalization quotient. From here, it would be nice to plot the presence of the
 motif relative to the length, allowing for the comparison of all the RNAs based
@@ -23,32 +23,42 @@ seqtk sample gencode.v47.lncRNA_transcripts.fa 20 | seqkit seq -w 60 - > ~/local
 gzip -k sample_lncRNAs_20.fasta
 ```
 
-### Understand how BioSequences, FASTX IO functions
+### Understand how BioSequences, FASTX IO functions 
 
 #### Store FASTA data inside vector
-The struc which the FASTX package employs is called a Record - each Record
+The struct which the FASTX package employs is called a Record - each Record
 represents a fasta sequence; it's *identifier* which is the first word after
 '>' e.g. ">chr1", the *description*, which is the remainder of the 'header'
 after the identifier e.g. ">chr1 | GHH18.ENSEM09912", and the *sequence* on the
 next line, which is the actual sequence content of the record. 
 
-The vector will thus be a vector of FASTX Records which can be accessed in a indexed manner.   
+The vector will thus be one consisting of FASTX Records which can be accessed in a indexed manner.   
 
-Using a GZIP decoder, the gzipped fasta file can validated, and accessed. 
+Using a GZIP decoder, the gzipped fasta file can be validated, and accessed. 
+
 ```julia
-using CodecZlib
+using CodecZlib 
 
 validate_fasta(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fasta.gz"))) === nothing
 
 io = FASTAReader(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fasta.gz")))
 
 collected_records = collect(io) ; close(io)
-```
+
+sequence(collected_records[1])
+
+identifier(collected_records[1]) 
 
 sequence(LongDNA{2},collected_records[1])
+```
+ 
+## Create  
 
+## Inputting a sequence 
 
-
+Safechecks
+* Ensure that the identifier for each sequence is unique, otherwise clashes will take place, and results will be combined for sequences with the same id. 
+  * Warn the user if the identifiers are not unique, and print which ones they are so that they can be changed manually. 
 
 
 
