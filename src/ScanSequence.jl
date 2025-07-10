@@ -11,7 +11,10 @@ export ScanSequence
 
 # Accept and manage argument using the ArgParse package https://argparsejl.readthedocs.io/en/latest/argparse.html 
 
+sequence = $1
 motif = $2
+
+
 
 
 end 
