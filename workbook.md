@@ -39,6 +39,7 @@ Using a GZIP decoder, the gzipped fasta file can be validated, and accessed.
 ```julia
 using CodecZlib 
 
+validate_fasta(open("test/test_data/sample_lncRNAs_20.fasta")) === nothing
 validate_fasta(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fasta.gz"))) === nothing
 
 io = FASTAReader(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fasta.gz")))
@@ -52,18 +53,27 @@ identifier(collected_records[1])
 sequence(LongDNA{2},collected_records[1])
 ```
  
-## Create  
+## Create src 
 
-## Inputting a sequence 
+### Scan a sequence for a motif - ScanSequence.jl
 
-Safechecks
+#### Handle arguments 
+
+This functionality will be handled with the `ArgParse.jl` [package](https://argparsejl.readthedocs.io/en/latest/argparse.html). 
+
+
+
+**Safechecks** 
+* Is the input file a FASTA file? 
 * Ensure that the identifier for each sequence is unique, otherwise clashes will take place, and results will be combined for sequences with the same id. 
   * Warn the user if the identifiers are not unique, and print which ones they are so that they can be changed manually. 
 
 
 
+### Perform unbiased enrichment of motif - MotifEnrichment.jl
 
-
+* PWM/enrichment using a vector of motifs of size k
+* Unbiased PWM/enrichment using all possible nmers of size k 
 
 
 

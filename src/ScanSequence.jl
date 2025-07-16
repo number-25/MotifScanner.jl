@@ -1,11 +1,11 @@
 # ScanSequence.jl 
+# Only modularize it if it'll be reused 
+#module ScanSequence
 
 # Add more info so that these packages are installed if they are not found on
 # the users system
 #
-using Pkg, CodecZlib, BioSequences, FASTX, ArgParse
-
-module ScanSequence
+using Pkg, CodecZlib, BioSequences, FASTX #, ArgParse
 
 export ScanSequence 
 
@@ -13,6 +13,16 @@ export ScanSequence
 
 sequence = $1
 motif = $2
+
+function ScanSequence(fasta, motif::AbstractString)
+    try 
+        catch(e)
+    end 
+    validate_fasta
+
+
+
+
 
 
 
