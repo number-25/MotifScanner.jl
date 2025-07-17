@@ -36,6 +36,9 @@ The vector will thus be one consisting of FASTX Records which can be accessed in
 
 Using a GZIP decoder, the gzipped fasta file can be validated, and accessed. 
 
+TODO
+* What if the fasta file given is massive e.g. over a gig? That's pretty damn cooked though.... all of the transcripts in ensemble 112 are only 80M...  
+
 ```julia
 using CodecZlib 
 
@@ -52,19 +55,19 @@ identifier(collected_records[1])
 
 sequence(LongDNA{2},collected_records[1])
 ```
- 
+
 ## Create src 
 
 ### Scan a sequence for a motif - ScanSequence.jl
+
+
 
 #### Handle arguments 
 
 This functionality will be handled with the `ArgParse.jl` [package](https://argparsejl.readthedocs.io/en/latest/argparse.html). 
 
-
-
 **Safechecks** 
-* Is the input file a FASTA file? 
+* Is the input file a FASTA file? Does it have the correct extension? 
 * Ensure that the identifier for each sequence is unique, otherwise clashes will take place, and results will be combined for sequences with the same id. 
   * Warn the user if the identifiers are not unique, and print which ones they are so that they can be changed manually. 
 
@@ -78,7 +81,9 @@ This functionality will be handled with the `ArgParse.jl` [package](https://argp
 
 
 
+### Montecarlo of motif on randomly generated sequence of size k
 
+Original idea taken from [bedtools](https://bedtools.readthedocs.io/en/latest/content/tools/shuffle.html)
 
 
 
