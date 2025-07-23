@@ -96,6 +96,14 @@ else
     fasta_sequence_records = collect(io) ; close(io)
 end 
 
+## sequence(fasta_sequence_records) needs to be in LongDNA{} type in order to
+# perform search 
+
+for record in fasta_sequence_records
+    record_sequence = LongDNA{4}(sequence(record))
+    record_id = identifier(record)
+    motif_search = findall(motif_query, 
+
 
 
 

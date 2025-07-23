@@ -60,8 +60,6 @@ sequence(LongDNA{2},collected_records[1])
 
 ### Scan a sequence for a motif - ScanSequence.jl
 
-
-
 #### Handle arguments 
 
 This functionality will be handled with the `ArgParse.jl` [package](https://argparsejl.readthedocs.io/en/latest/argparse.html). 
