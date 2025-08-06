@@ -65,7 +65,7 @@ sequence(LongDNA{2},collected_records[1])
 This functionality will be handled with the `ArgParse.jl` [package](https://argparsejl.readthedocs.io/en/latest/argparse.html). 
 
 **Safechecks** 
-* Is the input file a FASTA file? Does it have the correct extension? 
+* Is the input file a FASTA file? Does it have the correct extension? [done] 
 * Ensure that the identifier for each sequence is unique, otherwise clashes will take place, and results will be combined for sequences with the same id. 
   * Warn the user if the identifiers are not unique, and print which ones they are so that they can be changed manually. 
 

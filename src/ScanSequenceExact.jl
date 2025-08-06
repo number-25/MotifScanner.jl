@@ -1,6 +1,6 @@
-# ScanSequence.jl 
+# ScanSequenceExact.jl 
 # Only modularize it if it'll be reused 
-#module ScanSequence
+#module ScanSequenceExact
 
 # Add more info so that these packages are installed if they are not found on
 # the users system
@@ -96,19 +96,32 @@ else
     fasta_sequence_records = collect(io) ; close(io)
 end 
 
+# Verify that the identifiers for each fasta record are unique, otherwise throw
+# an error that they are duplicated and will cause double ups when counting
+# motifs occurance 
+
+length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_sequence_records)) ? throw(ErrorException("The input FASTA file contains duplicate FASTA identifiers/headers, please investigate the FASTA file 
+
+
+
 ## sequence(fasta_sequence_records) needs to be in LongDNA{} type in order to
 # perform search 
+
+# Create a dict to store matches. This dict will then be transformed to a CSV file and saved
+
+matches_dict = Dict()
 
 for record in fasta_sequence_records
     record_sequence = LongDNA{4}(sequence(record))
     record_id = identifier(record)
-    motif_search = findall(motif_query, 
+    # Search the motif against the sequence)
+    motif_search = findall(motif_query, record_sequence) 
+     
 
 
 
 
 
-
-#function ScanSequence(fasta, motif::AbstractString)
+#function ScanSequenceExact(fasta, motif::AbstractString)
 
 #end 
