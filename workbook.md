@@ -40,6 +40,7 @@ TODO
 * What if the fasta file given is massive e.g. over a gig? That's pretty damn cooked though.... all of the transcripts in ensemble 112 are only 80M...  
 
 ```julia
+
 using CodecZlib 
 
 validate_fasta(open("test/test_data/sample_lncRNAs_20.fasta")) === nothing
@@ -69,8 +70,31 @@ This functionality will be handled with the `ArgParse.jl` [package](https://argp
 * Ensure that the identifier for each sequence is unique, otherwise clashes will take place, and results will be combined for sequences with the same id. 
   * Warn the user if the identifiers are not unique, and print which ones they are so that they can be changed manually. 
 
+```julia
+# Create a motif sequence in BioSequence format
+motif_sequence = LongDNA{4}("AGTC")
+
+# Create an exact query 
+motif_query = ExactSearchQuery(motif_sequence)
+
+# Create a dict to store the matches
+matches_dict = Dict()
+
+# Loop through the sequences a perform a search, storing output in the dict
+for record in collected_records
+    record_sequence = LongDNA{4}(sequence(record))
+    record_id = identifier(record)
+    # Search the motif against the sequence)
+    motif_search = findall(motif_query, record_sequence)                           
+    matches_dict[record_id] = motif_search
+end
+
+CSV.write("test.csv", matches_dict)
+```
 
 
+
+//TODO
 ### Perform unbiased enrichment of motif - MotifEnrichment.jl
 
 * PWM/enrichment using a vector of motifs of size k

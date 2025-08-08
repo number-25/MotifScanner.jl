@@ -5,6 +5,7 @@
 # Add more info so that these packages are installed if they are not found on
 # the users system
 #
+
 using Pkg, CodecZlib, BioSequences, FASTX, ArgParse
 
 #export ScanSequence 
@@ -96,9 +97,15 @@ else
     fasta_sequence_records = collect(io) ; close(io)
 end 
 
+//TODO
 # Verify that the identifiers for each fasta record are unique, otherwise throw
 # an error that they are duplicated and will cause double ups when counting
 # motifs occurance 
+
+
+record_identifier_vector = identifier.(fastq_sequence_records)
+
+for id in record_identifier_vector
 
 length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_sequence_records)) ? throw(ErrorException("The input FASTA file contains duplicate FASTA identifiers/headers, please investigate the FASTA file 
 
@@ -115,7 +122,9 @@ for record in fasta_sequence_records
     record_sequence = LongDNA{4}(sequence(record))
     record_id = identifier(record)
     # Search the motif against the sequence)
-    motif_search = findall(motif_query, record_sequence) 
+    motif_search = findall(motif_query, record_sequence)
+    matches_dict[record_id] = motif_search
+end 
      
 
 
