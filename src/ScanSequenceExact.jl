@@ -110,7 +110,6 @@ for id in record_identifier_vector
 length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_sequence_records)) ? throw(ErrorException("The input FASTA file contains duplicate FASTA identifiers/headers, please investigate the FASTA file 
 
 
-
 ## sequence(fasta_sequence_records) needs to be in LongDNA{} type in order to
 # perform search 
 
@@ -123,7 +122,13 @@ for record in fasta_sequence_records
     record_id = identifier(record)
     # Search the motif against the sequence)
     motif_search = findall(motif_query, record_sequence)
-    matches_dict[record_id] = motif_search
+    if !isempty(motif_search)
+        start_range_vector = []
+        for range in motif_search
+            push!(start_range_vector, range.start)
+        end
+        matches_dict[record_id] = start_range_vector
+    end
 end 
      
 

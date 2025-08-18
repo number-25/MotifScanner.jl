@@ -48,13 +48,13 @@ validate_fasta(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fas
 
 io = FASTAReader(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fasta.gz")))
 
-collected_records = collect(io) ; close(io)
+fasta_sequence_records = collect(io) ; close(io)
 
-sequence(collected_records[1])
+sequence(fasta_sequence_records[1])
 
-identifier(collected_records[1]) 
+identifier(fasta_sequence_records[1]) 
 
-sequence(LongDNA{2},collected_records[1])
+sequence(LongDNA{2},fasta_sequence_records[1])
 ```
 
 ## Create src 
@@ -77,11 +77,14 @@ motif_sequence = LongDNA{4}("AGTC")
 # Create an exact query 
 motif_query = ExactSearchQuery(motif_sequence)
 
+# Perform a quick match
+tmp_search = findall(motif_query, LongDNA{4}(sequence(fasta_sequence_records[2])))
+
 # Create a dict to store the matches
 matches_dict = Dict()
 
 # Loop through the sequences a perform a search, storing output in the dict
-for record in collected_records
+for record in fasta_sequence_records
     record_sequence = LongDNA{4}(sequence(record))
     record_id = identifier(record)
     # Search the motif against the sequence)
