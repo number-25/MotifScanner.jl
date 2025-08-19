@@ -111,7 +111,7 @@ length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_se
 
 
 ## sequence(fasta_sequence_records) needs to be in LongDNA{} type in order to
-# perform search 
+## perform search 
 
 # Create a dict to store matches. This dict will then be transformed to a CSV file and saved
 
@@ -130,10 +130,45 @@ for record in fasta_sequence_records
         matches_dict[record_id] = start_range_vector
     end
 end 
-     
 
 
+## Store the location of the first base of a match, pasting into a single column
+## vector
 
+matches_vector = []
+
+for record in fasta_sequence_records
+    record_sequence = LongDNA{4}(sequence(record))
+    record_id = identifier(record)
+    # Search the motif against the sequence)
+    motif_search = findall(motif_query, record_sequence)
+    if !isempty(motif_search)
+        for range in motif_search
+            push!(matches_vector, range.start)
+        end
+    end
+end 
+
+
+## Tally the number of matches in 25bp wide bins, from 25 to 3000, inclusive.  
+
+### Create a dict with keys 25 in size
+
+bin_dict = Dict(map(x -> x => 0, collect(25:25:3000)))
+
+for match in matches_vector 
+    @show match
+    for value in collect(25:25:3000)
+        @show value
+        bracket = 0
+        if match in bracket:value+1
+            @show bracket:value+1
+            #@show bin_dict[value]
+            bin_dict[value] += 1
+        end 
+        bracket += 25
+    end
+end
 
 
 #function ScanSequenceExact(fasta, motif::AbstractString)

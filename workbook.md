@@ -71,6 +71,7 @@ This functionality will be handled with the `ArgParse.jl` [package](https://argp
   * Warn the user if the identifiers are not unique, and print which ones they are so that they can be changed manually. 
 
 ```julia
+
 # Create a motif sequence in BioSequence format
 motif_sequence = LongDNA{4}("AGTC")
 
@@ -83,17 +84,25 @@ tmp_search = findall(motif_query, LongDNA{4}(sequence(fasta_sequence_records[2])
 # Create a dict to store the matches
 matches_dict = Dict()
 
-# Loop through the sequences a perform a search, storing output in the dict
+# Loop through the sequences a perform a search, matches_dict = Dict()
+
 for record in fasta_sequence_records
     record_sequence = LongDNA{4}(sequence(record))
     record_id = identifier(record)
     # Search the motif against the sequence)
-    motif_search = findall(motif_query, record_sequence)                           
-    matches_dict[record_id] = motif_search
-end
+    motif_search = findall(motif_query, record_sequence)
+    if !isempty(motif_search)
+        start_range_vector = []
+        for range in motif_search
+            push!(start_range_vector, range.start)
+        end
+        matches_dict[record_id] = start_range_vector
+    end
+end 
 
 CSV.write("test.csv", matches_dict)
 ```
+
 
 
 
@@ -102,7 +111,7 @@ CSV.write("test.csv", matches_dict)
 
 * PWM/enrichment using a vector of motifs of size k
 * Unbiased PWM/enrichment using all possible nmers of size k 
-
+* Normalize for nucleotide content e.g. A/T rich?
 
 
 
