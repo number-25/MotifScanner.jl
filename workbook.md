@@ -75,6 +75,9 @@ This functionality will be handled with the `ArgParse.jl` [package](https://argp
 # Create a motif sequence in BioSequence format
 motif_sequence = LongDNA{4}("AGTC")
 
+# PAS signal
+motif_sequence = LongDNA{4}("AATAAA")
+
 # Create an exact query 
 motif_query = ExactSearchQuery(motif_sequence)
 
@@ -101,14 +104,103 @@ for record in fasta_sequence_records
 end 
 
 CSV.write("test.csv", matches_dict)
+
+
+```julia
+
+PAS_query = ExactSearchQuery(PAS_sequence)
+PAS_sequence = LongDNA{4}("AATAAA")
+
+for record in lncRNA_sequence_records
+    record_sequence = LongDNA{4}(sequence(record))
+    record_id = identifier(record)
+    # Search the motif against the sequence)
+    motif_search = findall(PAS_query, record_sequence)
+    if !isempty(motif_search)
+      for range in motif_search
+          push!(lncRNA_matches_vector, range.start)
+      end
+    end
+end
+
+bin_dict = Dict(map(x -> x => 0, collect(25:25:3000)))
+
+for match in lncRNA_matches_vector 
+    bracket = 0 
+    for value in collect(25:25:3000)
+        if match in bracket:value-1 
+            bin_dict[value] += 1 
+            bracket += 25
+            break
+        end 
+        bracket += 25 
+    end 
+end
+
+
+
 ```
+
+
+Some basic scribbling to get around normalization....
+
+The number of motifs in each bin needs to be normalize by the transcript length, so that those bins with many matches are not inflated simply because there are more transcripts of that size in them, since we're looking at overall motif density...
+
+```julia
+
+# Filter function
+filtered_bin_dict = filter(p -> !iszero(p.second), bin_dict)
+
+lncRNA_length_vector = []
+
+# Create a vector of the transcript lengths
+for records in lncRNA_sequence_records
+    push!(lncRNA_length_vector, length(sequence(records)))
+end
+
+# Attempt to count the number of transcripts in each bin size e.g. 25 all the way up to 30. This should provide a figure which we can use to normalize the motif count
+
+lncRNA_length_dict = Dict(map(x -> x => 0, collect(25:25:3000)))
+
+for rna in lncRNA_length_vector
+    #index = 0
+    for num in 25:25:3000
+        if num ∈ rna
+            lncRNA_length_dict[num] += 1
+            break
+            #index += 25
+        #else
+         #   index += 25
+        end
+    end
+end
+
+# Now work through the two dicts and create a third dict containing the normalized values?
+
+# somethings still not right....... appears it may have to be done on a per-base pair level, 
+
+normalized_lncRNA_dict = Dict()
+
+for (key,value) in bin_dict
+    @show key, value
+    @show lncRNA_length_dict[key]
+    #@show value / lncRNA_length_dict[key]
+    #normalized_lncRNA_dict[key] = value / lncRNA_length_dict[key]
+end
+
+
+
+
+
+```
+
+
 
 
 
 
 //TODO
 ### Perform unbiased enrichment of motif - MotifEnrichment.jl
-
 * PWM/enrichment using a vector of motifs of size k
 * Unbiased PWM/enrichment using all possible nmers of size k 
 * Normalize for nucleotide content e.g. A/T rich?

@@ -157,18 +157,20 @@ end
 bin_dict = Dict(map(x -> x => 0, collect(25:25:3000)))
 
 for match in matches_vector 
-    @show match
+    bracket = 0
     for value in collect(25:25:3000)
-        @show value
-        bracket = 0
-        if match in bracket:value+1
-            @show bracket:value+1
-            #@show bin_dict[value]
+        if match in bracket:value-1
             bin_dict[value] += 1
         end 
         bracket += 25
     end
 end
+
+### Remove the bins with zero values, they distort the plot too much 
+
+filter(p -> !iszero(p.second), bin_dict)
+
+plot(filter(p -> !iszero(p.second), bin_dict), size=(700,200)) 
 
 
 #function ScanSequenceExact(fasta, motif::AbstractString)
