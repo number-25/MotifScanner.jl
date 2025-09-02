@@ -105,11 +105,16 @@ end
 
 CSV.write("test.csv", matches_dict)
 
-
+# Perform this on all gencode lncRNA transcripts
 ```julia
 
-PAS_query = ExactSearchQuery(PAS_sequence)
+# Polyadenylation sequence motif
 PAS_sequence = LongDNA{4}("AATAAA")
+PAS_query = ExactSearchQuery(PAS_sequence)
+
+# Collect all exact matches into single vector  
+
+lncRNA_matches_vector = []
 
 for record in lncRNA_sequence_records
     record_sequence = LongDNA{4}(sequence(record))
@@ -123,28 +128,25 @@ for record in lncRNA_sequence_records
     end
 end
 
-bin_dict = Dict(map(x -> x => 0, collect(25:25:3000)))
+# Store the number of matches at each base pair inside a dict,
+# keys are base pair locus, values are number of matches at each base pair
+
+bp_bin_dict = Dict(map(x -> x => 0, collect(1:3000)))
 
 for match in lncRNA_matches_vector 
-    bracket = 0 
-    for value in collect(25:25:3000)
-        if match in bracket:value-1 
-            bin_dict[value] += 1 
-            bracket += 25
+    for value in collect(1:3000)
+        if match == value 
+            bp_bin_dict[value] += 1 
             break
         end 
-        bracket += 25 
     end 
 end
-
-
-
 ```
 
-
-Some basic scribbling to get around normalization....
-
-The number of motifs in each bin needs to be normalize by the transcript length, so that those bins with many matches are not inflated simply because there are more transcripts of that size in them, since we're looking at overall motif density...
+Normalise the number of matches at each base pair by the number of total base
+pairs at that position for all lncRNAs. This will ensure that those loci with
+many matches are not inflated simply because there are more transcripts of that
+size in them, since we're looking at overall motif density.
 
 ```julia
 
@@ -158,42 +160,32 @@ for records in lncRNA_sequence_records
     push!(lncRNA_length_vector, length(sequence(records)))
 end
 
-# Attempt to count the number of transcripts in each bin size e.g. 25 all the way up to 30. This should provide a figure which we can use to normalize the motif count
+# Attempt to count the number of transcripts in each bp locus e.g. 1 all the way up to 3000. This should provide a figure which we can use to normalize the motif count
 
-lncRNA_length_dict = Dict(map(x -> x => 0, collect(25:25:3000)))
+lncRNA_bp_length_dict = Dict(map(x -> x => 0, collect(1:3000)))
 
 for rna in lncRNA_length_vector
-    #index = 0
-    for num in 25:25:3000
-        if num ∈ rna
-            lncRNA_length_dict[num] += 1
-            break
-            #index += 25
-        #else
-         #   index += 25
+    for num in 1:3000
+        if num ∈ 0:rna
+            lncRNA_bp_length_dict[num] += 1
         end
     end
 end
 
 # Now work through the two dicts and create a third dict containing the normalized values?
-
-# somethings still not right....... appears it may have to be done on a per-base pair level, 
+# This appears to be functioning correctly now. 
 
 normalized_lncRNA_dict = Dict()
 
-for (key,value) in bin_dict
-    @show key, value
-    @show lncRNA_length_dict[key]
-    #@show value / lncRNA_length_dict[key]
-    #normalized_lncRNA_dict[key] = value / lncRNA_length_dict[key]
+for (key,value) in bp_bin_dict
+    normalized_lncRNA_dict[key] = (value / lncRNA_bp_length_dict[key]) * 10^4
 end
-
-
-
-
 
 ```
 
+Do a basic plot.
+
+`plot(normalized_lncRNA_dict)`   
 
 
 

@@ -6,7 +6,7 @@
 # the users system
 #
 
-using Pkg, CodecZlib, BioSequences, FASTX, ArgParse
+using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV
 
 #export ScanSequence 
 
@@ -56,6 +56,8 @@ main()
 # https://docs.julialang.org/en/v1/manual/command-line-interface/ 
 
 fasta_sequence = ARGS[1]
+fasta_sequence_filename = basename(fasta_sequence)
+
 if typeof(ARGS[2]) != String
     throw(ArgumentError("The motif_sequence positional argument is not a string of letters (e.g. AGTA), please verify the motif"))
 else
@@ -102,13 +104,11 @@ end
 # an error that they are duplicated and will cause double ups when counting
 # motifs occurance 
 
-
 record_identifier_vector = identifier.(fastq_sequence_records)
 
 for id in record_identifier_vector
 
-length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_sequence_records)) ? throw(ErrorException("The input FASTA file contains duplicate FASTA identifiers/headers, please investigate the FASTA file 
-
+length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_sequence_records)) ? throw(ErrorException("The input FASTA file contains duplicate FASTA identifiers/headers, please investigate the FASTA file")
 
 ## sequence(fasta_sequence_records) needs to be in LongDNA{} type in order to
 ## perform search 
@@ -131,6 +131,14 @@ for record in fasta_sequence_records
     end
 end 
 
+# Write the CSV file
+
+CSV.write("$(fasta_sequence_name).csv", header=["sequence name", "motif loci start",] matches_dict)
+
+# Use a DataFrame instead? then finally write to CSV with additional
+    # information?
+
+
 
 ## Store the location of the first base of a match, pasting into a single column
 ## vector
@@ -150,21 +158,9 @@ for record in fasta_sequence_records
 end 
 
 
-## Tally the number of matches in 25bp wide bins, from 25 to 3000, inclusive.  
+## TODO 
+## Average motif density per base-pair - in 100bp bins?
 
-### Create a dict with keys 25 in size
-
-bin_dict = Dict(map(x -> x => 0, collect(25:25:3000)))
-
-for match in matches_vector 
-    bracket = 0
-    for value in collect(25:25:3000)
-        if match in bracket:value-1
-            bin_dict[value] += 1
-        end 
-        bracket += 25
-    end
-end
 
 ### Remove the bins with zero values, they distort the plot too much 
 
