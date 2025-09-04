@@ -6,7 +6,7 @@
 # the users system
 #
 
-using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV
+using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames
 
 #export ScanSequence 
 
@@ -113,13 +113,18 @@ length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_se
 ## sequence(fasta_sequence_records) needs to be in LongDNA{} type in order to
 ## perform search 
 
-# Create a dict to store matches. This dict will then be transformed to a CSV file and saved
+# Loop through the sequences a perform a motif search, get length of sequence
+# gc content and the location of the motif match, as well as a motif match count
 
-matches_dict = Dict()
+# Create a DataFrame to store matches, count of matches, and record length, gc_content?
+
+match_dataframe = DataFrame(record = "", length = [Int64], gc_content = [Float64], motif_loci = [], count = [Int64])
 
 for record in fasta_sequence_records
-    record_sequence = LongDNA{4}(sequence(record))
+    record_sequence = LongDNA{2}(sequence(record))
     record_id = identifier(record)
+    record_length = length(sequence(record))
+    gc_content = round(gc_content(record_sequence), sigdigits = 3)
     # Search the motif against the sequence)
     motif_search = findall(motif_query, record_sequence)
     if !isempty(motif_search)
@@ -127,17 +132,12 @@ for record in fasta_sequence_records
         for range in motif_search
             push!(start_range_vector, range.start)
         end
-        matches_dict[record_id] = start_range_vector
+        match_count = length(start_range_vector)
+        push!(match_dataframe, [record_id, length, gc_content, start_range_vector, match_count])
     end
 end 
 
-# Write the CSV file
-
-CSV.write("$(fasta_sequence_name).csv", header=["sequence name", "motif loci start",] matches_dict)
-
-# Use a DataFrame instead? then finally write to CSV with additional
-    # information?
-
+CSV.write("$(fasta_sequence_filename).csv", match_dataframe)
 
 
 ## Store the location of the first base of a match, pasting into a single column

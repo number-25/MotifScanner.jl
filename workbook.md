@@ -48,7 +48,12 @@ validate_fasta(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fas
 
 io = FASTAReader(GzipDecompressorStream(open("test/test_data/sample_lncRNAs_20.fasta.gz")))
 
+# On QIMR rig
+io = FASTAReader(GzipDecompressorStream(open("/mnt/hdd1/references/annotations/transcriptome/human/gh38/ensemble/gencode.v46_112.transcripts.fa.gz")))
+
 fasta_sequence_records = collect(io) ; close(io)
+
+lncRNA_sequence_records = collect(io) ; close(io)
 
 sequence(fasta_sequence_records[1])
 
@@ -59,7 +64,7 @@ sequence(LongDNA{2},fasta_sequence_records[1])
 
 ## Create src 
 
-### Scan a sequence for a motif - ScanSequence.jl
+### Scan a sequence for an exact motif match - ScanSequenceExact.jl
 
 #### Handle arguments 
 
@@ -75,23 +80,24 @@ This functionality will be handled with the `ArgParse.jl` [package](https://argp
 # Create a motif sequence in BioSequence format
 motif_sequence = LongDNA{4}("AGTC")
 
-# PAS signal
-motif_sequence = LongDNA{4}("AATAAA")
-
 # Create an exact query 
 motif_query = ExactSearchQuery(motif_sequence)
 
 # Perform a quick match
 tmp_search = findall(motif_query, LongDNA{4}(sequence(fasta_sequence_records[2])))
 
-# Create a dict to store the matches
-matches_dict = Dict()
+# Create a DataFrame to store matches, count of matches, and record length, gc_content?
 
-# Loop through the sequences a perform a search, matches_dict = Dict()
+match_dataframe = DataFrame(record = "", length = [Int64], gc_content = [Float64], motif_loci = [], count = [Int64])
+
+# Loop through the sequences a perform a motif search, get length of sequence
+# gc content and the location of the motif match, as well as a motif match count
 
 for record in fasta_sequence_records
     record_sequence = LongDNA{4}(sequence(record))
     record_id = identifier(record)
+    record_length = length(sequence(record))
+    gc_content = round(gc_content(LongDNA{2}(sequence(record_sequence))), sigdigits = 3)
     # Search the motif against the sequence)
     motif_search = findall(motif_query, record_sequence)
     if !isempty(motif_search)
@@ -99,11 +105,12 @@ for record in fasta_sequence_records
         for range in motif_search
             push!(start_range_vector, range.start)
         end
-        matches_dict[record_id] = start_range_vector
+        match_count = length(start_range_vector)
+        push!(match_dataframe, [record_id, length, gc_content, start_range_vector, match_count])
     end
 end 
 
-CSV.write("test.csv", matches_dict)
+CSV.write("test.csv", match_dataframe)
 
 # Perform this on all gencode lncRNA transcripts
 ```julia
@@ -119,6 +126,7 @@ lncRNA_matches_vector = []
 for record in lncRNA_sequence_records
     record_sequence = LongDNA{4}(sequence(record))
     record_id = identifier(record)
+    #record_length = length(sequence(record))
     # Search the motif against the sequence)
     motif_search = findall(PAS_query, record_sequence)
     if !isempty(motif_search)
@@ -202,15 +210,5 @@ Do a basic plot.
 ### Montecarlo of motif on randomly generated sequence of size k
 
 Original idea taken from [bedtools](https://bedtools.readthedocs.io/en/latest/content/tools/shuffle.html)
-
-
-
-
-
-
-
-
-
-
 
 
