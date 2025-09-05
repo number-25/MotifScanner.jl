@@ -24,7 +24,8 @@ function parse_commandline()
             help = "string of the motif that is being searched for"
             required = true
             arg_type = String
-#
+#TODO - add in another ARG for output directory
+
 #        "--opt1"
 #            help = "an option with an argument"
 #        "--opt2", "-o"
@@ -67,7 +68,7 @@ end
 # Validate the input arguments - throw errors if input files are not FASTA
 # formatted, or if they have an incorrect extension
 
-if endswith(fasta_sequence, r".gz")
+if endswith(fasta_sequence, ".gz")
     validate_fasta(GzipDecompressorStream(open(fasta_sequence))) !== nothing ? throw(ArgumentError("The input gzipped FASTA file (first argument) is not correctly formatted in FASTA format, please quality check the file")) : nothing
 elseif endswith(fasta_sequence, r".fasta|.fa")
     validate_fasta(open(fasta_sequence)) !== nothing ? throw(ArgumentError("The input file FASTA file (first argument) is not correctly formatted in FASTA format, please quality check the file")) : nothing
@@ -77,7 +78,7 @@ else
     throw(ArgumentError("The input file file does not have a FASTA file extension, and it doesn't appear to be a correctly formatted FASTA file either, please look into the file you are providing"))
 end 
 
-# Convert the motif sequence into a BioSequence query type - LongDNA/RNA{4}
+# TODO Convert the motif sequence into a BioSequence query type - LongDNA/RNA{4} - BUT both sequence AND query HAVE TO BE the same SequenceType
 
 if 'U' ∈ motif_sequence 
     motif_biosequence = LongRNA{4}(motif_sequence)
@@ -93,22 +94,22 @@ motif_query = ExactSearchQuery(motif_biosequence)
 
 if endswith(fasta_sequence, r".gz")
     fasta_io = FASTAReader(GzipDecompressorStream(open(fasta_sequence)))
-    fasta_sequence_records = collect(fasta_io) ; close(io)
+    fasta_sequence_records = collect(fasta_io) ; close(fasta_io)
 else
-    fasta_io = FASTAReader((open(fasta_sequence))
-    fasta_sequence_records = collect(io) ; close(io)
+    fasta_io = FASTAReader((open(fasta_sequence)))
+    fasta_sequence_records = collect(fasta_io) ; close(fasta_io)
 end 
 
-//TODO
+#//TODO
 # Verify that the identifiers for each fasta record are unique, otherwise throw
 # an error that they are duplicated and will cause double ups when counting
 # motifs occurance 
 
-record_identifier_vector = identifier.(fastq_sequence_records)
+#record_identifier_vector = identifier.(fasta_sequence_records)
 
-for id in record_identifier_vector
+#for id in record_identifier_vector
 
-length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_sequence_records)) ? throw(ErrorException("The input FASTA file contains duplicate FASTA identifiers/headers, please investigate the FASTA file")
+#length(identifier.(fasta_sequence_records)) != length(unique(identifier.(fasta_sequence_records))) : throw(ErrorException("The input FASTA file contains duplicate FASTA identifiers/headers, please investigate the FASTA file"))
 
 ## sequence(fasta_sequence_records) needs to be in LongDNA{} type in order to
 ## perform search 
@@ -118,13 +119,13 @@ length(identifier.(fasta_sequence_records) != length(unique(identifier.(fasta_se
 
 # Create a DataFrame to store matches, count of matches, and record length, gc_content?
 
-match_dataframe = DataFrame(record = "", length = [Int64], gc_content = [Float64], motif_loci = [], count = [Int64])
+match_dataframe = DataFrame(record = String[], length = Int64[], gc_content = Float64[], motif_loci = Vector[], count = Int64[])
 
 for record in fasta_sequence_records
-    record_sequence = LongDNA{2}(sequence(record))
+    record_sequence = LongDNA{4}(sequence(record))
     record_id = identifier(record)
     record_length = length(sequence(record))
-    gc_content = round(gc_content(record_sequence), sigdigits = 3)
+    gc_content = round(BioSequences.gc_content(record_sequence), sigdigits = 3)
     # Search the motif against the sequence)
     motif_search = findall(motif_query, record_sequence)
     if !isempty(motif_search)
@@ -133,7 +134,7 @@ for record in fasta_sequence_records
             push!(start_range_vector, range.start)
         end
         match_count = length(start_range_vector)
-        push!(match_dataframe, [record_id, length, gc_content, start_range_vector, match_count])
+        push!(match_dataframe, [record_id, record_length, gc_content, start_range_vector, match_count])
     end
 end 
 
@@ -164,9 +165,9 @@ end
 
 ### Remove the bins with zero values, they distort the plot too much 
 
-filter(p -> !iszero(p.second), bin_dict)
+#filter(p -> !iszero(p.second), bin_dict)
 
-plot(filter(p -> !iszero(p.second), bin_dict), size=(700,200)) 
+#plot(filter(p -> !iszero(p.second), bin_dict), size=(700,200)) 
 
 
 #function ScanSequenceExact(fasta, motif::AbstractString)
