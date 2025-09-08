@@ -2,6 +2,9 @@
 
 Notes, explanations, summaries and general information on the development of this package. 
 
+* https://julialang.org/blog/2021/01/precompile_tutorial/ 
+* https://github.com/GunnarFarneback/PackageCompatUI.jl
+
 ## Primary Goal
 I want to be able to input the fasta sequence of an RNA, and scan the RNA
 string to search for the presence of specific motifs. In particular, I am
