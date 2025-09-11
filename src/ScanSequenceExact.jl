@@ -24,20 +24,26 @@ function parse_commandline()
             help = "string of the motif that is being searched for"
             required = true
             arg_type = String
-#TODO - add in another ARG for output directory
+        "--output_directory"
+            help = "path to output directory, will be created if it doesn't exist"
+            required = true
+            arg_type = String
+        "--plot"
+            help = "produce a plot of motif frequency across transcript"
+            action = :store_true
+        "--plot_end_range"
+            help = "end range of plot (3000bp by default)"
+            arg_type = Int64
+            default = 3000
+            required = false
 
-#        "--opt1"
-#            help = "an option with an argument"
-#        "--opt2", "-o"
-#            help = "another option with an argument"
-#            arg_type = Int
-#            default = 0
-#        "--flag1"
-#            help = "an option without argument, i.e. a flag"
-#            action = :store_true
-#        "arg1"
-#            help = "a positional argument"
-#            required = true
+## TODO - montecarlo option to run motif detection on simulated sequences and
+# plot results alongside motif frequency
+        "--random_reference"
+            help = "run motif detection on equal number of simulated sequences of similar length"
+            required = false
+            action = :store_true
+
     end
 
     return parse_args(settings)
@@ -53,17 +59,30 @@ end
 
 main()
 
+args = parse_commandline()
+
+
 # Set ARGS - arguments
 # https://docs.julialang.org/en/v1/manual/command-line-interface/ 
 
-fasta_sequence = ARGS[1]
+output_directory = args["output_directory"]
+
+# check if the directory exists, and create it if it doesn't
+
+isdir(output_directory) ; mkdir(output_directory) 
+
+fasta_sequence = args["fasta_file"]
+
 fasta_sequence_filename = basename(fasta_sequence)
 
-if typeof(ARGS[2]) != String
+if typeof(args["motif_sequence"]) != String
     throw(ArgumentError("The motif_sequence positional argument is not a string of letters (e.g. AGTA), please verify the motif"))
 else
-    motif_sequence = ARGS[2]
+    motif_sequence = args["motif_sequence"]
 end 
+
+transcript_end_range = args["plot_end_range"]
+
 
 # Validate the input arguments - throw errors if input files are not FASTA
 # formatted, or if they have an incorrect extension
@@ -78,10 +97,10 @@ else
     throw(ArgumentError("The input file file does not have a FASTA file extension, and it doesn't appear to be a correctly formatted FASTA file either, please look into the file you are providing"))
 end 
 
-# TODO Convert the motif sequence into a BioSequence query type - LongDNA/RNA{4} - BUT both sequence AND query HAVE TO BE the same SequenceType
+## Ensure that all biosequences are of DNA alphabet
 
 if 'U' ∈ motif_sequence 
-    motif_biosequence = LongRNA{4}(motif_sequence)
+    motif_biosequence = convert(LongDNA{4}, LongRNA{4}(motif_sequence))
 else 
     motif_biosequence = LongDNA{4}(motif_sequence)
 end 
@@ -138,30 +157,70 @@ for record in fasta_sequence_records
     end
 end 
 
-CSV.write("$(fasta_sequence_filename).csv", match_dataframe)
+CSV.write("$(output_directory)/$(fasta_sequence_filename).csv", match_dataframe)
 
+# If the --plot option is used, the following code will be executed, producing
+# plot(s) of the motif density across the transcript(s)
+
+args["plot"] == true ; break
 
 ## Store the location of the first base of a match, pasting into a single column
 ## vector
 
-matches_vector = []
+matches_vector = match_dataframe[:,start_range_vector]
+transcript_length_vector = match_dataframe[:,record_length]
 
-for record in fasta_sequence_records
-    record_sequence = LongDNA{4}(sequence(record))
-    record_id = identifier(record)
+#for record in fasta_sequence_records
+#    record_sequence = LongDNA{4}(sequence(record))
+#    record_id = identifier(record)
     # Search the motif against the sequence)
-    motif_search = findall(motif_query, record_sequence)
-    if !isempty(motif_search)
-        for range in motif_search
-            push!(matches_vector, range.start)
+#    motif_search = findall(motif_query, record_sequence)
+#    if !isempty(motif_search)
+#        for range in motif_search
+#            push!(matches_vector, range.start)
+#        end
+#    end
+#end 
+
+# Store the number of matches at each base pair inside a dict,
+# keys are base pair locus, values are number of matches at each base pair
+# plot_end_range default is 3000
+
+bp_bin_dict = Dict(map(x -> x => 0, collect(1:plot_end_range)))
+
+for match in matches_vector
+    for value in collect(1:plot_end_range)
+        if match == value
+            bp_bin_dict[value] += 1
+            break
         end
     end
-end 
+end
+
+# Count the number of transcripts in each bp locus e.g. 1 all the way up to end range. This should provide a figure which we can use to normalize the motif count
+
+bp_length_dict = Dict(map(x -> x => 0, collect(1:plot_end_range)))
+
+for rna in transcript_length_vector
+    for num in 1:plot_end_range
+        if num ∈ 0:rna
+            bp_length_dict[num] += 1
+        end
+    end
+end
+
+# Now work through the two dicts and create a third dict containing the normalized values?
+# This appears to be functioning correctly now.
+
+normalized_transcript_dict = Dict()
+
+for (key,value) in bp_bin_dict
+    normalized_transcript_dict[key] = (value / bp_length_dict[key]) * 10^4
+end
 
 
 ## TODO 
 ## Average motif density per base-pair - in 100bp bins?
-
 
 ### Remove the bins with zero values, they distort the plot too much 
 

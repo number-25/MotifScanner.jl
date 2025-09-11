@@ -2,6 +2,8 @@
 
 Scan a sequence for an exact motif match - ScanSequenceExact.jl
 
+* Allow the input of a list of motifs? 
+
 ## Handle arguments
 
 This functionality will be handled with the `ArgParse.jl` [package](https://argparsejl.readthedocs.io/en/latest/argparse.html).
@@ -73,7 +75,7 @@ for record in lncRNA_sequence_records
     record_sequence = LongDNA{4}(sequence(record))
     record_id = identifier(record)
     # Search the motif against the sequence)
-    motif_search = findall(PAS_query, record_sequence)
+    motif_search = findall(motif_query, record_sequence)
     if !isempty(motif_search)
       for range in motif_search
           push!(lncRNA_matches_vector, range.start)
