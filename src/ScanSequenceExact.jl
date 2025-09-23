@@ -6,7 +6,7 @@
 # the users system
 #
 
-using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames
+using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames, Plots
 
 #export ScanSequence 
 
@@ -69,7 +69,7 @@ output_directory = args["output_directory"]
 
 # check if the directory exists, and create it if it doesn't
 
-isdir(output_directory) ; mkdir(output_directory) 
+isdir(output_directory) ? println("Output is in $(output_directory)") : mkdir(output_directory) 
 
 fasta_sequence = args["fasta_file"]
 
@@ -162,13 +162,12 @@ CSV.write("$(output_directory)/$(fasta_sequence_filename).csv", match_dataframe)
 # If the --plot option is used, the following code will be executed, producing
 # plot(s) of the motif density across the transcript(s)
 
-args["plot"] == true ; break
+if args["plot"] == true
 
 ## Store the location of the first base of a match, pasting into a single column
 ## vector
-
-matches_vector = match_dataframe[:,start_range_vector]
-transcript_length_vector = match_dataframe[:,record_length]
+    matches_vector = reduce(vcat, match_dataframe[:,:motif_loci])
+    transcript_length_vector = match_dataframe[:,:length]
 
 #for record in fasta_sequence_records
 #    record_sequence = LongDNA{4}(sequence(record))
@@ -186,37 +185,37 @@ transcript_length_vector = match_dataframe[:,record_length]
 # keys are base pair locus, values are number of matches at each base pair
 # plot_end_range default is 3000
 
-bp_bin_dict = Dict(map(x -> x => 0, collect(1:plot_end_range)))
+    bp_bin_dict = Dict(map(x -> x => 0, collect(1:transcript_end_range)))
 
-for match in matches_vector
-    for value in collect(1:plot_end_range)
-        if match == value
-            bp_bin_dict[value] += 1
-            break
+    for match in matches_vector
+        for value in collect(1:transcript_end_range)
+            if match == value
+                bp_bin_dict[value] += 1
+                break
+            end
         end
     end
-end
 
 # Count the number of transcripts in each bp locus e.g. 1 all the way up to end range. This should provide a figure which we can use to normalize the motif count
 
-bp_length_dict = Dict(map(x -> x => 0, collect(1:plot_end_range)))
+    bp_length_dict = Dict(map(x -> x => 0, collect(1:transcript_end_range)))
 
-for rna in transcript_length_vector
-    for num in 1:plot_end_range
-        if num ∈ 0:rna
-            bp_length_dict[num] += 1
+    for rna in transcript_length_vector
+        @show rna
+        for num in 1:transcript_end_range
+            if num ∈ 0:rna
+                bp_length_dict[num] += 1
+            end
         end
     end
-end
 
-# Now work through the two dicts and create a third dict containing the normalized values?
-# This appears to be functioning correctly now.
+# Now work through the two dicts and create a third dict containing the normalized values
 
-normalized_transcript_dict = Dict()
+    normalized_transcript_dict = Dict()
 
-for (key,value) in bp_bin_dict
-    normalized_transcript_dict[key] = (value / bp_length_dict[key]) * 10^4
-end
+    for (key,value) in bp_bin_dict
+        normalized_transcript_dict[key] = (value / bp_length_dict[key]) * 10^4
+    end
 
 
 ## TODO 
@@ -228,7 +227,11 @@ end
 
 #plot(filter(p -> !iszero(p.second), bin_dict), size=(700,200)) 
 
+    normalized_transcript_dict_plot = plot(normalized_transcript_dict)
 
+    png(normalized_transcript_dict_plot, "$(output_directory)/$(fasta_sequence_filename).png") 
+
+end
 #function ScanSequenceExact(fasta, motif::AbstractString)
 
 #end 
