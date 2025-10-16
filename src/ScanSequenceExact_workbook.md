@@ -18,18 +18,18 @@ This functionality will be handled with the `ArgParse.jl` [package](https://argp
 
 ## Basic FASTX and BioSequences functionality
 
-```julitranscripta
+```julia
+using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames, Plots, Random
+
 
 # Create a motif sequence in BioSequence format
 motif_sequence = LongDNA{4}("AGTC")
 
 # Polyadenylation sequence motif
-PAS_sequence = LongDNA{4}("AATAAA")
+motif_sequence = LongDNA{4}("AATAAA")
 
 # Create an exact query
 motif_query = ExactSearchQuery(motif_sequence)
-
-PAS_query = ExactSearchQuery(PAS_sequence)
 
 # Perform a quick match to demonstrate functionality
 tmp_search = findall(motif_query, LongDNA{4}(sequence(fasta_sequence_records[2])))
@@ -103,7 +103,7 @@ size in them, since we're looking at overall motif density.
 ```julia
 
 # Random, unrelated filter function
-filtered_bin_dict = filter(p -> !iszero(p.second), bin_dict)
+filtered_bin_dict = filter(p -> !iszero(p.second), bp_bin_dict)
 
 # Attempt to count the number of transcripts in each bp locus e.g. 1 all the way up to 3000. This should provide a figure which we can use to normalize the motif count
 
@@ -128,9 +128,18 @@ end
 
 ```
 
+## Add the option of performing motif detection on simulated sequences 
+
+
+
+
+
+
+
 ## Do a basic plot of the normalized dict
 ```julia
 
 plot(normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair", seriescolor = :green, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
 
 ```
+  

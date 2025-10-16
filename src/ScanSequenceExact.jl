@@ -212,6 +212,21 @@ end
 # Write out motif density at each bp in CSV format
 CSV.write(normalized_transcript_dict, "", headers = []) 
 
+
+## Motif density on simulated reads - this is executed if the random_reference
+# option is provided
+
+
+motif_search = findall(motif_query, record_sequence)
+        if !isempty(motif_search)
+            start_range_vector = []
+            for range in motif_search
+                push!(start_range_vector, range.start)
+            end
+            match_count = length(start_range_vector)
+            push!(match_dataframe, [record_id, record_length, gc_content, start_range_vector, match_count])
+        end
+
 ## TODO
 ## Average motif density per base-pair - in 100bp bins?
 
