@@ -6,7 +6,7 @@
 # the users system
 #
 
-using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames, Plots
+using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames, Plots, Distributions
 
 #export ScanSequence 
 
@@ -173,7 +173,7 @@ transcript_length_vector = match_dataframe[:,:length]
 function bpBinDict(vector)
     bp_bin_dict = Dict(map(x -> x => 0, collect(1:transcript_end_range)))
     for match in vector
-        for value in collect(1:transcript_end_range)
+        for value in collect(1:transcript_end_range)jk
             if match == value
                 bp_bin_dict[value] += 1
                 break
@@ -212,20 +212,124 @@ end
 # Write out motif density at each bp in CSV format
 CSV.write(normalized_transcript_dict, "", headers = []) 
 
-
 ## Motif density on simulated reads - this is executed if the random_reference
 # option is provided
 
+## simulate reads - same number of reads will be simualted as those in the main
+## dataset 
 
-motif_search = findall(motif_query, record_sequence)
+## Generate a length distribution in the simulated reads which closely follows
+## the true reads 
+
+### Using logNormal distribution --- find the mean and std-dev using this
+#function
+
+function myLogNormal(m,std)
+    γ = 1+std^2/m^2
+    μ = log(m/sqrt(γ))
+    σ = sqrt(log(γ))
+
+    return LogNormal(μ,σ)
+end
+
+function simulateTranscripts(length_vector)
+    isempty(length_vector) ? throw(ArgumentError("please check the provided argument, it should be a vector of Floats")) : nothing
+    ## Get the mean and std-dev of the real sequence reads
+    fasta_sequence_reads_mean = Int64(round(mean(length_vector), digits = 0))
+    fasta_sequence_reads_stdev = Int64(round(std(length_vector), digits = 0))
+    # Seed the log normal distribution
+    log_normal_distribution = myLogNormal(fasta_sequence_reads_mean, fasta_sequence_reads_stdev)
+    # Vector of simulated transcript lengths
+    simulated_transcript_length_vector = []
+    for len in rand(log_normal_distribution, length(length_vector))
+        push!(simulated_transcript_length_vector, Int64(round(len, digits = 0)))
+    end
+    ## Vector to store reads 
+    simulated_transcripts = []
+    ## Simulate reads 
+    for transcript in simulated_transcript_length_vector
+        push!(simulated_transcripts, randdnaseq(transcript))
+    end
+    return simulated_transcripts
+end
+
+simulateTranscripts(transcript_length_vector)
+
+#### UNTESTED
+
+simulated_match_dataframe = DataFrame(record = String[], length = Int64[], gc_content = Float64[], motif_loci = Vector[], count = Int64[])
+
+function simulatedMatchToDataFrame(simulated_transcripts)
+    for transcript in simulated_transcripts
+        counter = 1
+        transcript_name = "MTFSC_" * string(counter)
+        transcript_length = length(transcript)
+        gc_content = round(BioSequences.gc_content(transcript), sigdigits = 3)
+        # Search the motif against the sequence)
+        motif_search = findall(motif_query, transcript)
         if !isempty(motif_search)
             start_range_vector = []
             for range in motif_search
                 push!(start_range_vector, range.start)
             end
             match_count = length(start_range_vector)
-            push!(match_dataframe, [record_id, record_length, gc_content, start_range_vector, match_count])
+            push!(match_dataframe, [transcript_name, transcript_length, gc_content, start_range_vector, match_count])
         end
+    #CSV.write("$(output_directory)/$(fasta_sequence_filename).csv", match_dataframe)
+end 
+
+simulatedMatchToDataFrame(simulateTranscripts(transcript_length_vector))
+
+#### UNTESTED - TODO
+
+
+## Store the location of the first base of a match, pasting into a single column
+## vector
+simulated_matches_vector = reduce(vcat, match_dataframe[:,:motif_loci])
+transcript_length_vector = match_dataframe[:,:length]
+
+# Store the number of matches at each base pair inside a dict,
+# keys are base pair locus, values are number of matches at each base pair
+# plot_end_range default is 3000
+
+function bpBinDict(vector)
+    bp_bin_dict = Dict(map(x -> x => 0, collect(1:transcript_end_range)))
+    for match in vector
+        for value in collect(1:transcript_end_range)jk
+            if match == value
+                bp_bin_dict[value] += 1
+                break
+            end
+        end
+    end
+    return bp_bin_dict
+end 
+
+bp_matches = bpBinDict(matches_vector)
+
+# Count the number of transcripts in each bp locus e.g. 1 all the way up to end range. This should provide a figure which we can use to normalize the motif count
+
+function bpMotifDensity(vector)
+    bp_length_dict = Dict(map(x -> x => 0, collect(1:transcript_end_range)))
+    for rna in vector
+        for num in 1:transcript_end_range
+            if num ∈ 0:rna
+                bp_length_dict[num] += 1
+            end
+        end
+    end
+    return bp_length_dict
+end    
+
+bp_density = bpMotifDensity(transcript_length_vector)
+
+# Now work through the two dicts and create a third dict containing the normalized values
+
+normalized_transcript_dict = Dict()
+
+for (key,value) in bp_matches   
+    normalized_transcript_dict[key] = (value / bp_density[key]) * 10^4
+end
 
 ## TODO
 ## Average motif density per base-pair - in 100bp bins?
