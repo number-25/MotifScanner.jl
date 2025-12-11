@@ -69,7 +69,7 @@ sequence(LongDNA{2},fasta_sequence_records[1])
 This functionality will be handled with the `ArgParse.jl` [package](https://argparsejl.readthedocs.io/en/latest/argparse.html). 
 
 
-# //TODO
+# TODO
 ### Perform unbiased enrichment of motif - MotifEnrichment.jl
 * PWM/enrichment using a vector of motifs of size k
 * Unbiased PWM/enrichment using all possible nmers of size k 
