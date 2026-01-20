@@ -4,7 +4,6 @@
 
 # Add more info so that these packages are installed if they are not found on
 # the users system
-#
 
 using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames, Plots, Distributions
 
@@ -36,16 +35,11 @@ function parse_commandline()
             arg_type = Int64
             default = 3000
             required = false
-
-## TODO - montecarlo option to run motif detection on simulated sequences and
-# plot results alongside motif frequency
         "--random_reference"
             help = "run motif detection on equal number of simulated sequences of similar length"
             required = false
             action = :store_true
-
     end
-
     return parse_args(settings)
 end
 
@@ -135,12 +129,11 @@ end
 
 # Loop through the sequences a perform a motif search, get length of sequence
 # gc content and the location of the motif match, as well as a motif match count
-
 # Create a DataFrame to store matches, count of matches, and record length, gc_content?
 
-match_dataframe = DataFrame(record = String[], length = Int64[], gc_content = Float64[], motif_loci = Vector[], count = Int64[])
-
 function matchToDataFrame(sequence_records)
+    match_dataframe = DataFrame(record = String[], length = Int64[], gc_content = Float64[], motif_loci = Vector[], count = Int64[])
+    isa(sequence_records, Array{FASTX.FASTA.Record, 1}) ? nothing ; throw(ArgumentError("Incorrect type passed to function, needs to be a Array{FASTX.FASTA.Record, 1}"))
     for record in sequence_records
         record_sequence = LongDNA{4}(sequence(record))
         record_id = identifier(record)
@@ -156,6 +149,7 @@ function matchToDataFrame(sequence_records)
             match_count = length(start_range_vector)
             push!(match_dataframe, [record_id, record_length, gc_content, start_range_vector, match_count])
         end
+    end
     CSV.write("$(output_directory)/$(fasta_sequence_filename).csv", match_dataframe)
 end 
 
@@ -284,8 +278,6 @@ end
 
 simulatedMatchToDataFrame(simulateTranscripts(transcript_length_vector))
 
-#### MORE TESTING - TODO
-
 ## Store the location of the first base of a match, pasting into a single column
 ## vector
 simulated_matches_vector = reduce(vcat, simulated_match_dataframe[:,:motif_loci])
@@ -334,17 +326,21 @@ for (key,value) in simulated_bp_matches
     simulated_normalized_transcript_dict[key] = (value / simulated_bp_density[key]) * 10^4
 end
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ## TODO
 ## Average motif density per base-pair - in 100bp bins?
 
 ### Remove the bins with zero values, they distort the plot too much?? Left
 # code?
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+
 # If the --plot option is used, the following code will be executed, producing
 # plot(s) of the motif density across the transcript(s)
 
 if args["plot"] == true
-    normalized_transcript_dict_plot = plot(normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair", seriescolor = :green, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
+    normalized_transcript_dict_plot = plot(normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair", seriescolor = :green, seriesalpha = 0.5, grid = false, label="query", xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
     png(normalized_transcript_dict_plot, "$(output_directory)/$(fasta_sequence_filename).png") 
 end
 
@@ -354,15 +350,11 @@ end
 ## Plot on their own 
 
 if args["plot"] == true && args["random_reference"] == true
-    simulated normalized_transcript_dict_plot = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
+    simulated_normalized_transcript_dict_plot = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label="simulated", xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
     png(simulated_normalized_transcript_dict_plot, "$(output_directory)/$(fasta_sequence_filename)_sim_standard.png") 
+    real_and_simulated_plot = plot!(simulated_normalized_transcript_dict_plot, normalized_transcript_dict)
+    png(real_and_simulated_plot, "$(output_directory)/$(fasta_sequence_filename)_query_sim_overlay.png")
 end
-
-## Plot overlayed with 
-
-p = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
-
-plot!(p, normalized_transcript_dict, seriescolor = :green, seriesalpha = 0.5, label = "simulated")
 
 #function ScanSequenceExact(fasta, motif::AbstractString)
 
