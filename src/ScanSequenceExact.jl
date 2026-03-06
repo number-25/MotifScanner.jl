@@ -35,12 +35,9 @@ function parse_commandline()
             arg_type = Int64
             default = 3000
             required = false
-<<<<<<< HEAD
 
 # montecarlo option to run motif detection on simulated sequences and
 # plot results alongside motif frequency
-=======
->>>>>>> 9b0a9f1a66633e0da53b195da8bd777f7b89c9f2
         "--random_reference"
             help = "run motif detection on equal number of simulated sequences of similar length"
             required = false
@@ -372,20 +369,11 @@ end
 ## Plot on their own 
 
 if args["plot"] == true && args["random_reference"] == true
-<<<<<<< HEAD
     simulated_normalized_transcript_dict_plot = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
     png(simulated_normalized_transcript_dict_plot, "$(output_directory)/$(fasta_sequence_filename)_sim_standard.png") 
 ## Plot overlayed with 
 p = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
 plot!(p, normalized_transcript_dict, seriescolor = :green, seriesalpha = 0.5, label = "simulated")
 #end
-=======
-    simulated_normalized_transcript_dict_plot = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label="simulated", xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
-    png(simulated_normalized_transcript_dict_plot, "$(output_directory)/$(fasta_sequence_filename)_sim_standard.png") 
-    real_and_simulated_plot = plot!(simulated_normalized_transcript_dict_plot, normalized_transcript_dict)
-    png(real_and_simulated_plot, "$(output_directory)/$(fasta_sequence_filename)_query_sim_overlay.png")
-end
-
->>>>>>> 9b0a9f1a66633e0da53b195da8bd777f7b89c9f2
 #function ScanSequenceExact(fasta, motif::AbstractString)
 
