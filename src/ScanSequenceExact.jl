@@ -1,5 +1,5 @@
 # ScanSequenceExact.jl 
-# Only modularize it if it'll be reused 
+# Only modularize it if it'll be reused - unless we need it for testing purposes? 
 #module ScanSequenceExact
 
 # Add more info so that these packages are installed if they are not found on
@@ -16,7 +16,7 @@ using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames, Plots, Dis
 function parse_commandline()
     settings = ArgParseSettings()
 
-    @add_arg_table settings begin
+    @add_arg_table! settings begin
         "fasta_file" 
             help = "fasta file containing RNA/DNA sequences of interest" 
             required = true
@@ -37,7 +37,7 @@ function parse_commandline()
             default = 3000
             required = false
 
-## TODO - montecarlo option to run motif detection on simulated sequences and
+# montecarlo option to run motif detection on simulated sequences and
 # plot results alongside motif frequency
         "--random_reference"
             help = "run motif detection on equal number of simulated sequences of similar length"
@@ -159,6 +159,8 @@ function matchToDataFrame(sequence_records)
     CSV.write("$(output_directory)/$(fasta_sequence_filename).csv", match_dataframe)
 end 
 
+export matchToDataFrame
+
 matchToDataFrame(fasta_sequence_records)
 
 ## Store the location of the first base of a match, pasting into a single column
@@ -183,6 +185,8 @@ function bpBinDict(vector)
     return bp_bin_dict
 end 
 
+export bpBinDict
+
 bp_matches = bpBinDict(matches_vector)
 
 # Count the number of transcripts in each bp locus e.g. 1 all the way up to end range. This should provide a figure which we can use to normalize the motif count
@@ -198,6 +202,8 @@ function bpMotifDensity(vector)
     end
     return bp_length_dict
 end    
+
+export bpMotifDensity
 
 bp_density = bpMotifDensity(transcript_length_vector)
 
@@ -226,13 +232,15 @@ CSV.write(normalized_transcript_dict, "", headers = [])
 ### Using logNormal distribution --- find the mean and std-dev using this
 #function
 
-function myLogNormal(m,std)
+function myLogNormal(m, std)
     γ = 1+std^2/m^2
     μ = log(m/sqrt(γ))
     σ = sqrt(log(γ))
 
     return LogNormal(μ,σ)
 end
+
+export myLogNormal
 
 function simulateTranscripts(length_vector)
     isempty(length_vector) ? throw(ArgumentError("please check the provided argument, it should be a vector of Floats")) : nothing
@@ -254,6 +262,8 @@ function simulateTranscripts(length_vector)
     end
     return simulated_transcripts
 end
+
+export simulateTranscripts
 
 simulateTranscripts(transcript_length_vector)
 
@@ -282,6 +292,8 @@ function simulatedMatchToDataFrame(simulated_transcripts)
     end
 end
 
+export simulatedMatchToDataFrame
+
 simulatedMatchToDataFrame(simulateTranscripts(transcript_length_vector))
 
 #### MORE TESTING - TODO
@@ -308,6 +320,8 @@ function simulatedbpBinDict(vector)
     return bp_bin_dict
 end 
 
+export simulatedbpBinDict
+
 simulated_bp_matches = simulatedbpBinDict(simulated_matches_vector)
 
 # Count the number of transcripts in each bp locus e.g. 1 all the way up to end range. This should provide a figure which we can use to normalize the motif count
@@ -323,6 +337,8 @@ function simulatedbpMotifDensity(vector)
     end
     return bp_length_dict
 end    
+
+export simulatedbpMotifDensity
 
 simulated_bp_density = simulatedbpMotifDensity(simulated_transcript_length_vector)
 
@@ -354,16 +370,11 @@ end
 ## Plot on their own 
 
 if args["plot"] == true && args["random_reference"] == true
-    simulated normalized_transcript_dict_plot = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
+    simulated_normalized_transcript_dict_plot = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
     png(simulated_normalized_transcript_dict_plot, "$(output_directory)/$(fasta_sequence_filename)_sim_standard.png") 
-end
-
 ## Plot overlayed with 
-
 p = plot(simulated_normalized_transcript_dict, xticks = 0:300:3000, plot_title = "Motif density per base pair of simulated sequences", seriescolor = :orange, seriesalpha = 0.5, grid = false, label=false, xlabel = "Position (bp)", ylabel = "Motif density (10⁴)")
-
 plot!(p, normalized_transcript_dict, seriescolor = :green, seriesalpha = 0.5, label = "simulated")
-
+#end
 #function ScanSequenceExact(fasta, motif::AbstractString)
 
-#end 
