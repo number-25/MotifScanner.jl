@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 include("../src/ScanSequenceExact.jl")
 #include("../src/ScanSequenceFuzzy.jl")
 
@@ -29,4 +30,23 @@ using Test
     @test simulatedbpBinDict(simulated_matches_vector) isa Dict 
     # Last function I believe?
     @test simulatedbpMotifDensity(simulated_transcript_length_vector) isa Dict 
+=======
+using ScanSequenceExact
+using Test
+
+# ScanSequenceExact.jl
+## matchToDataFrame() only accepts a very specific type Array{FASTX.FASTA.Record, 1})
+test_vector = []
+@test_throws ArgumentError matchToDataFrame("aaa")
+@test_throws ArgumentError matchToDataFrame(5.0)
+@test_throws ArgumentError matchToDataFrame(114)
+@test_throws ArgumentError matchToDataFrame(test_vector)
+
+@test  
+
+
+
+@testset "ScanSequenceExact.jl" begin
+
+>>>>>>> 9b0a9f1a66633e0da53b195da8bd777f7b89c9f2
 end

@@ -70,6 +70,9 @@ This functionality will be handled with the `ArgParse.jl` [package](https://argp
 
 
 # TODO
+* Write tests and test set for ScanSequenceExact.jl
+
+
 ### Perform unbiased enrichment of motif - MotifEnrichment.jl
 * PWM/enrichment using a vector of motifs of size k
 * Unbiased PWM/enrichment using all possible nmers of size k 
