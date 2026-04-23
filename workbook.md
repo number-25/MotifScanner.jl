@@ -75,6 +75,23 @@ This functionality will be handled with the `ArgParse.jl` [package](https://argp
 
 ### Perform unbiased enrichment of motif - MotifEnrichment.jl
 * PWM/enrichment using a vector of motifs of size k
+
+sample function for unbiased enrichment
+
+```julia
+function seqSlider(se, window::Int64)
+    end_index = lastindex(se)
+    counter = 1
+    while (counter + window) <= end_index
+      se[counter:counter+window-1]
+      counter += 1
+    end
+    return motif_vector
+end
+
+```
+
+
 * Unbiased PWM/enrichment using all possible nmers of size k 
 * Normalize for nucleotide content e.g. A/T rich?
 
