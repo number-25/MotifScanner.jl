@@ -80,14 +80,30 @@ sample function for unbiased enrichment
 
 ```julia
 function seqSlider(se, window::Int64)
+    motif_vector = []
     end_index = lastindex(se)
     counter = 1
+    rev_se = reverse(se)
     while (counter + window) <= end_index
-      se[counter:counter+window-1]
+      push!(motif_vector, se[counter:counter+window-1])
+      push!(motif_vector, rev_se[counter:counter+window-1])
       counter += 1
     end
     return motif_vector
 end
+
+motif_vector = []
+
+for vec in fasta_sequence_records
+    push!(motif_vector, seqSlider(sequence(vec), 6))
+end
+
+motif_vector_counted = countmap(reduce(vcat, motif_vector))
+
+filtered_motif = filter(x -> x.second >= 30, collect(motif_vector_counted))
+sort!(filtered_motif, by=last)
+
+plot([x.first for x in filtered_motif], [x.second for x in filtered_motif], xtick=false, yscale=:log)
 
 ```
 
