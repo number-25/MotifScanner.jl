@@ -98,12 +98,16 @@ for vec in fasta_sequence_records
     push!(motif_vector, seqSlider(sequence(vec), 6))
 end
 
+using StatsBase
+
 motif_vector_counted = countmap(reduce(vcat, motif_vector))
 
-filtered_motif = filter(x -> x.second >= 30, collect(motif_vector_counted))
+filtered_motif = filter(x -> x.second >= 20, collect(motif_vector_counted))
 sort!(filtered_motif, by=last)
 
 plot([x.first for x in filtered_motif], [x.second for x in filtered_motif], xtick=false, yscale=:log)
+
+# Do same thing on a random sequence - see if there is an enrichment of certain motifs above expectation
 
 ```
 
