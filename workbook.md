@@ -109,6 +109,13 @@ plot([x.first for x in filtered_motif], [x.second for x in filtered_motif], xtic
 
 # Do same thing on a random sequence - see if there is an enrichment of certain motifs above expectation
 
+using Combinatorics
+
+saturation of motifs? - at what length do all motifs occur in a string? assuming base frequency is equal - likelihood of seeing 20 ACGA motifs in string of length P … etc
+
+collect(permutations("acgt"))
+
+
 ```
 
 

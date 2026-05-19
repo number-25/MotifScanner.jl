@@ -1,13 +1,9 @@
-# ScanSequenceExact.jl 
-# Only modularize it if it'll be reused - unless we need it for testing purposes? 
-#module ScanSequenceExact
+# MotifEnrichment.jl
 
 # Add more info so that these packages are installed if they are not found on
 # the users system
 
 using Pkg, CodecZlib, BioSequences, FASTX, ArgParse, CSV, DataFrames, Plots, Distributions
-
-#export ScanSequence 
 
 # Accept and manage argument using the ArgParse package https://argparsejl.readthedocs.io/en/latest/argparse.html 
 # ArgParse 
@@ -19,6 +15,10 @@ function parse_commandline()
         "fasta_file" 
             help = "fasta file containing RNA/DNA sequences of interest" 
             required = true
+        "nmer_length"
+            help = "length of nnmer"
+            required = true
+            arg_type - Int64
         "motif_sequence"
             help = "string of the motif that is being searched for"
             required = true
