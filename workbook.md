@@ -89,7 +89,8 @@ function seqSlider(se, window::Int64)
       push!(motif_vector, rev_se[counter:counter+window-1])
       counter += 1
     end
-    return motif_vector
+    
+    return unique(motif_vector)
 end
 
 motif_vector = []
@@ -114,7 +115,13 @@ using Combinatorics
 saturation of motifs? - at what length do all motifs occur in a string? assuming base frequency is equal - likelihood of seeing 20 ACGA motifs in string of length P … etc
 
 collect(permutations("acgt"))
+join.(collect(permutations("acgt")))
 
+# Create vector from permutation where all elements are "DNA" type
+[LongDNA{4}(x) for x in join.(collect(permutations("acgt")))] 
+
+# as ExactSearchQuery which can be used to match a biosequence 
+[ExactSearchQuery(LongDNA{4}(x)) for x in join.(collect(permutations("acgt")))] 
 
 ```
 
